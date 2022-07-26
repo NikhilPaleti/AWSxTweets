@@ -1,9 +1,13 @@
-# Importing required libraries
+# Importing required libs 
+import csv
 import json
 import boto3
 import config
 import twitter
+import datetime
 import requests
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Config.py file structure as used: (It has been gitignored tf)
 # twitter_access_token_secret = ''
@@ -42,3 +46,87 @@ if response.status_code == 201:
     print('Response: {}'.format(response.text))
 else:
     print('Filter Creation Error: (HTTP Error {}) {}'.format(response.status_code, response.text))
+
+#Some pre-processing for the graphs 
+pos_list = []
+neg_list = []
+neu_list = []
+mix_list = []
+id_list = []
+
+
+fig= plt.figure()
+# ax1 = fig.add_subplot(1,1,1)
+plt.ion()
+
+# def animate():
+#     ax1.clear()
+#     ax1.plot(pos_list, color = "green")
+#     ax1.plot(neg_list, color = "red")
+#     ax1.plot(neu_list, color = "blue")
+#     ax1.plot(mix_list, color = "black")
+
+
+
+def stream_connect(bearer_token):
+    
+    response = requests.get('https://api.twitter.com/2/tweets/search/stream', headers=headers, stream=True)
+    
+    for new_line in response.iter_lines():        
+        if (new_line):
+            tweet = json.loads(new_line)
+            tweet_id = tweet['data']['id']
+            # id_list.append(tweet_id)
+            text = tweet['data']['text']
+            tweet_sentiment = aws_api_comprehend.detect_sentiment(Text = text, LanguageCode = 'en')
+            sentiment = tweet_sentiment['Sentiment']
+            sentiment_score = tweet_sentiment['SentimentScore']
+            for score in sentiment_score:
+                sentiment_score[score] = round(sentiment_score[score], 3)
+            
+            global pos_list
+            global neg_list
+            global neu_list
+            global mix_list
+            
+            
+            pos_list.append(sentiment_score['Positive']) 
+            neg_list.append(sentiment_score['Negative'])
+            neu_list.append(sentiment_score['Neutral'])
+            mix_list.append(sentiment_score['Mixed'])    
+            
+            
+            if (len(mix_list)>15):
+                no = len(mix_list)-15
+                mix_list = mix_list[no:]
+                pos_list = pos_list[no:]
+                neg_list = neg_list[no:]   
+                neu_list = neu_list[no:] 
+                plt.pause(0.1) 
+                plt.cla()       
+            
+            # print('Tweet ID: ', tweet_id)
+            # print('Tweet: ', text) 
+            # print('Sentiments: ', sentiment)
+            # print('Major Sentiment: ' sentiment_score)
+    
+            
+            plt.plot(pos_list, color = "green", label='Positive')
+            plt.plot(neg_list, color = "red", label='Negative')
+            plt.plot(neu_list, color = "blue", label='Neutral')
+            plt.plot(mix_list, color = "green", label='Black')
+            
+            plt.legend()
+            
+            # time.sleep(0.2)
+            plt.show()
+            # print (len(mix_list))
+
+# Final code to kick-off everything
+ 
+BEARER_TOKEN = config.twitter_bearer_token
+while True:
+    stream_connect(BEARER_TOKEN)
+
+
+    
