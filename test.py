@@ -1,10 +1,8 @@
 # Importing required libs 
-import csv
 import json
 import boto3
 import config
 import twitter
-import datetime
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,12 +17,15 @@ import matplotlib.pyplot as plt
 # aws_access_key_id = ''
 # aws_secret_access_key = ''
 
+# dynamodb_partition_key = ''
+# dynamodb_table_name = ''
+
 
 twt_api = twitter.Api(consumer_key=config.twitter_consumer_key, consumer_secret=config.twitter_consumer_secret, access_token_key=config.twitter_access_token_key, access_token_secret=config.twitter_access_token_secret)
 
 aws_api_comprehend = boto3.client(service_name = 'comprehend', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
-aws_api_s3 = boto3.client(service_name = 's3', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
-
+# aws_api_dynamo = boto3.client(service_name = 'dynamodb', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
+aws_api_dynamo = boto3.resource('dynamodb', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
 # Headers/Parameters for the request
 headers = {
         'Authorization': 'Bearer {}'.format(config.twitter_bearer_token),
@@ -107,9 +108,22 @@ def stream_connect(bearer_token):
             
             # print('Tweet ID: ', tweet_id)
             # print('Tweet: ', text) 
-            # print('Sentiments: ', sentiment)
-            # print('Major Sentiment: ' sentiment_score)
-    
+            # print('Major Sentiment: ', sentiment)
+            # print('Sentiments: ', sentiment_score)
+            
+            
+            table = aws_api_dynamo.Table(config.dynamodb_table_name)
+            cols = ["Tweet", "MainSentiment", "Breakdown"]
+
+            response = table.put_item(
+                Item = {
+                    config.dynamodb_partition_key: str(tweet_id),
+                    cols [0]: str(text),
+                    cols [1]: str(sentiment) ,
+                    cols [2]: str(sentiment_score) 
+                }
+            )
+            
             
             plt.plot(pos_list, color = "green", label='Positive')
             plt.plot(neg_list, color = "red", label='Negative')
@@ -129,4 +143,9 @@ while True:
     stream_connect(BEARER_TOKEN)
 
 
-    
+#Experimenting with the upload to s3/Dynamo
+# bucket = 'letmepretendbucket'
+# filename = 'file.csv'
+
+# aws_api_s3.Object(bucket, filename).delete()
+# aws_api_s3.upload_file(Filename = filename, Bucket= bucket, Key = filename)
