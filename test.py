@@ -126,10 +126,10 @@ def process(bearer_token):
             # plt.plot(mix_list, color = "green", label='Black')
             
             # Them same lovely live graphs, but now in different subplots. 
-            ax[0][0].plot(pos_list, color = "green", label='Positive')
-            ax[0][1].plot(neg_list, color = "red", label='Negative')
-            ax[1][0].plot(neu_list, color = "blue", label='Neutral')
-            ax[1][1].plot(mix_list, color = "black", label='Mixed')
+            ax[0][0].plot(pos_list, color = "green")
+            ax[0][1].plot(neg_list, color = "red")
+            ax[1][0].plot(neu_list, color = "blue")
+            ax[1][1].plot(mix_list, color = "black")
             
             ax[0][0].set_title('Positive')
             ax[0][1].set_title('Negative')
