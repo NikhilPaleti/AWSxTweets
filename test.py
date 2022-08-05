@@ -39,7 +39,7 @@ params = (
 payload = {
     'add':[
         {
-            'value': 'Google'
+            'value': 'Laal Singh Chadha'
         }
     ]
 }
@@ -58,7 +58,8 @@ neu_list = []
 mix_list = []
 id_list = []
 
-fig= plt.figure()
+# fig= plt.figure()
+fig, ax = plt.subplots(2,2)
 plt.ion() #Key to live graph updating
 
 def process(bearer_token):
@@ -99,7 +100,11 @@ def process(bearer_token):
                 neg_list = neg_list[no:]   
                 neu_list = neu_list[no:] 
                 plt.pause(0.1) 
-                plt.cla()       
+                # plt.cla() 
+                ax[0][0].cla()
+                ax[0][1].cla()
+                ax[1][0].cla()
+                ax[1][1].cla()
              
             # Adding Tweet data to DynamoDB
             table = aws_api_dynamo.Table(config.dynamodb_table_name)
@@ -114,11 +119,22 @@ def process(bearer_token):
                 }
             )
             
-            # Them lovely live-graphs 
-            plt.plot(pos_list, color = "green", label='Positive')
-            plt.plot(neg_list, color = "red", label='Negative')
-            plt.plot(neu_list, color = "blue", label='Neutral')
-            plt.plot(mix_list, color = "green", label='Black')
+            # # Them lovely live-graphs 
+            # plt.plot(pos_list, color = "green", label='Positive')
+            # plt.plot(neg_list, color = "red", label='Negative')
+            # plt.plot(neu_list, color = "blue", label='Neutral')
+            # plt.plot(mix_list, color = "green", label='Black')
+            
+            # Them same lovely live graphs, but now in different subplots. 
+            ax[0][0].plot(pos_list, color = "green", label='Positive')
+            ax[0][1].plot(neg_list, color = "red", label='Negative')
+            ax[1][0].plot(neu_list, color = "blue", label='Neutral')
+            ax[1][1].plot(mix_list, color = "black", label='Mixed')
+            
+            ax[0][0].set_title('Positive')
+            ax[0][1].set_title('Negative')
+            ax[1][0].set_title('Neutral')
+            ax[1][1].set_title('Mixed')
             
             plt.legend()
             plt.show()
