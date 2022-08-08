@@ -4,7 +4,6 @@ import boto3
 import config
 import twitter
 import requests
-import numpy as np
 import matplotlib.pyplot as plt
 
 # Config.py file structure as used: (It has been gitignored tf)
@@ -20,12 +19,26 @@ import matplotlib.pyplot as plt
 # dynamodb_partition_key = ''
 # dynamodb_table_name = ''
 
-twt_api = twitter.Api(consumer_key=config.twitter_consumer_key, consumer_secret=config.twitter_consumer_secret, access_token_key=config.twitter_access_token_key, access_token_secret=config.twitter_access_token_secret)
+# Initializing all the APIs we need - Twitter, AWS Comprehend and AWS DynamoDB (S3 experimental)
+twt_api = twitter.Api(consumer_key=config.twitter_consumer_key, 
+                      consumer_secret=config.twitter_consumer_secret, 
+                      access_token_key=config.twitter_access_token_key, 
+                      access_token_secret=config.twitter_access_token_secret)
 
-aws_api_comprehend = boto3.client(service_name = 'comprehend', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
-# aws_api_s3 = boto3.client(service_name = 's3', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
-aws_api_dynamo = boto3.resource('dynamodb', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
+aws_api_comprehend = boto3.client(service_name = 'comprehend', 
+                                  aws_access_key_id = config.aws_access_key_id, 
+                                  aws_secret_access_key = config.aws_secret_access_key, 
+                                  region_name = 'us-east-1')
+aws_api_dynamo = boto3.resource('dynamodb', 
+                                aws_access_key_id = config.aws_access_key_id, 
+                                aws_secret_access_key = config.aws_secret_access_key, 
+                                region_name = 'us-east-1')
+# aws_api_s3 = boto3.client(service_name = 's3', 
+#                           aws_access_key_id = config.aws_access_key_id, 
+#                           aws_secret_access_key = config.aws_secret_access_key, 
+#                           region_name = 'us-east-1')
 
+# Soft-Coding the Topic to filter tweets from. Optional. 
 twt_topic = "Brexit"
 # print("Type Desired Topic to pull tweets from: ")
 # twt_topic = str(input())
@@ -49,11 +62,14 @@ payload = {
 }
 
 # Checking if Twitter API is working and giving desired response
-response = requests.post('https://api.twitter.com/2/tweets/search/stream/rules', headers=headers, json=payload)
+response = requests.post('https://api.twitter.com/2/tweets/search/stream/rules', 
+                         headers=headers, 
+                         json=payload)
 if response.status_code == 201:
     print('Response: {}'.format(response.text))
 else:
-    print('Filter Creation Error: (HTTP Error {}) {}'.format(response.status_code, response.text))
+    print('Filter Creation Error: (HTTP Error {}) {}'.format(response.status_code, 
+                                                             response.text))
 
 #Some pre-processing for the graphs 
 pos_list = []
@@ -68,14 +84,17 @@ plt.ion() #Key to live graph updating
 
 def process(bearer_token):
     
-    response = requests.get('https://api.twitter.com/2/tweets/search/stream', headers=headers, stream=True)
+    response = requests.get('https://api.twitter.com/2/tweets/search/stream', 
+                            headers=headers, 
+                            stream=True)
     
     for new_line in response.iter_lines():        
         if (new_line):
             tweet = json.loads(new_line)
             tweet_id = tweet['data']['id']
             tweet_text = tweet['data']['text']
-            aws_analysis = aws_api_comprehend.detect_sentiment(Text = tweet_text, LanguageCode = 'en')
+            aws_analysis = aws_api_comprehend.detect_sentiment(Text = tweet_text, 
+                                                               LanguageCode = 'en')
             tweet_sentiment = aws_analysis['Sentiment']
             tweet_analysis = aws_analysis['SentimentScore']
             # Need rounding. Breaks Matplotlib and slows down a lot. Its like 10 decimals or some shizz
