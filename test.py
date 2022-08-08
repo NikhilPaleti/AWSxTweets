@@ -26,6 +26,10 @@ aws_api_comprehend = boto3.client(service_name = 'comprehend', aws_access_key_id
 # aws_api_s3 = boto3.client(service_name = 's3', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
 aws_api_dynamo = boto3.resource('dynamodb', aws_access_key_id = config.aws_access_key_id, aws_secret_access_key = config.aws_secret_access_key, region_name = 'us-east-1')
 
+twt_topic = "Brexit"
+# print("Type Desired Topic to pull tweets from: ")
+# twt_topic = str(input())
+
 # Headers/Parameters for the request
 headers = {
         'Authorization': 'Bearer {}'.format(config.twitter_bearer_token),
@@ -39,7 +43,7 @@ params = (
 payload = {
     'add':[
         {
-            'value': 'Laal Singh Chadha'
+            'value': twt_topic
         }
     ]
 }
@@ -136,7 +140,7 @@ def process(bearer_token):
             ax[1][0].set_title('Neutral')
             ax[1][1].set_title('Mixed')
             
-            plt.legend()
+            # plt.legend()
             plt.show()
 
 # Final code to kick-off everything, i.e, stream
